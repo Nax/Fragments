@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.13)
 
 option(SUPERBUILD "Build this project as a superbuild" ON)
 
@@ -25,6 +25,6 @@ if (SUPERBUILD)
 		ALWAYS ON
     )
 else()
-    project(Fragments)
+    project(Fragments C ASM_NASM)
     add_subdirectory(src)
 endif()
