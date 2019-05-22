@@ -1,5 +1,4 @@
 OUTPUT_FORMAT("binary")
-OUTPUT_ARCH("i386")
 SECTIONS
 {
     . = 0x7c00;
@@ -9,7 +8,7 @@ SECTIONS
     .text16 : ALIGN(0x10) { *(.text16) }
     .text : ALIGN(0x10) { *(.text) }
     .data : ALIGN(0x10) { *(.data) }
-    .rodata : ALIGN(0x10) { *(.rodata) }
+    .rodata : ALIGN(0x10) { *(.rodata) *(.rodata.*) }
     .bss : ALIGN(0x10) { *(.bss) }
     /DISCARD/ : { *(*) }
 }

@@ -10,10 +10,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/* Mini libc */
-void* memcpy(void* dest, const void* src, size_t n);
-void* memset(void* dest, int value, size_t n);
-
 typedef struct {
     uint8_t     size;
     uint8_t     zero;
@@ -30,6 +26,16 @@ typedef struct {
     uint16_t di;
 } PACKED Regs;
 
+/* minic.c */
+void* memcpy(void* dest, const void* src, size_t n);
+void* memmove(void* dest, const void* src, size_t n);
+void* memset(void* dest, int value, size_t n);
+
+/* print.c */
+void putchar(int c);
+void print(const char* str);
+
+/* --- */
 int bios(int num, Regs* regs);
 
 #endif
