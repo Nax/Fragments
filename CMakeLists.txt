@@ -67,6 +67,8 @@ else()
         add_subdirectory(util)
     else()
         project(Fragments C ASM_NASM)
+        # We will handle the output format of NASM ourselves
+        set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -o <OBJECT> <SOURCE>")
         add_subdirectory(src)
     endif()
 endif()

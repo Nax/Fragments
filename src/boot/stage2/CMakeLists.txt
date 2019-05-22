@@ -6,10 +6,11 @@ set_target_properties(boot_stage2 PROPERTIES LINKER_LANGUAGE C LINK_DEPENDS "${L
 target_compile_options(
     boot_stage2
     PRIVATE
+    $<$<COMPILE_LANGUAGE:ASM_NASM>: -f elf32>
+    $<$<COMPILE_LANGUAGE:C>:-m32>
     $<$<COMPILE_LANGUAGE:C>:-ffreestanding>
     $<$<COMPILE_LANGUAGE:C>:-nostdlib>
     $<$<COMPILE_LANGUAGE:C>:-mno-sse>
     $<$<COMPILE_LANGUAGE:C>:-mno-sse2>
-    $<$<COMPILE_LANGUAGE:C>:-mno-red-zone>
 )
-target_link_options(boot_stage2 PRIVATE -ffreestanding -nostdlib -mno-sse -mno-sse2 -mno-red-zone -lgcc -T "${LINKER_SCRIPT}")
+target_link_options(boot_stage2 PRIVATE -ffreestanding -nostdlib -mno-sse -mno-sse2 -T "${LINKER_SCRIPT}")
