@@ -2,6 +2,7 @@
 #define IMAGE_H
 
 #include <cstddef>
+#include "Partition.h"
 
 class Image
 {
@@ -15,6 +16,7 @@ public:
 
 private:
     size_t      _size;
+    Partition   _partition;
     size_t      _bl1Size;
     char*       _bl1Data;
     size_t      _bl2Size;
