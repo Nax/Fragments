@@ -22,8 +22,12 @@ private:
     uint64_t    allocChunk();
     void        makeRoot();
 
-    size_t  _size;
-    char*   _data;
+    uint64_t    dirLookup(uint64_t parent, const char* filename);
+    void        dirWrite(uint64_t parent, const char* filename, uint64_t child);
+
+    size_t      _size;
+    uint64_t    _root;
+    char*       _data;
 };
 
 #endif
