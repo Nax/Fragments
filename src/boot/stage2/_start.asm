@@ -16,6 +16,15 @@ _start:
     mov sp, ax
     mov bp, ax
 
+    ; Pre-push dl and si
+    and edx, 0xff
+    and esi, 0xffff
+    push esi
+    push edx
+
+    ; Push a dummy return address for pmain
+    push DWORD 0
+
     ; Set the segments to zero
     xor ax, ax
     mov ss, ax
@@ -35,4 +44,3 @@ _zerocs:
     ; Enter the main bootloader code
     push DWORD pmain
     jmp enter_mode_protected
-

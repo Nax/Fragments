@@ -24,6 +24,9 @@ _start:
     mov di, 0x600
     rep movsw
 
+    ; Save dl
+    mov [saved_dl], dl
+
     ; Jump to the correct address
     jmp 0x00:load_stage1
 
@@ -36,6 +39,9 @@ DAPACK_STAGE1:
     dw  0
     dd  1
     dd  0
+
+saved_dl:
+    db  0
 
 load_stage1:
     ; Load stage1
@@ -118,6 +124,9 @@ try_boot:
 
     ; Restore the MBR pointer
     pop si
+
+    ; Reload dl
+    mov dl, [saved_dl]
 
     ; Jump to stage2
     jmp 0x0:0x7c00

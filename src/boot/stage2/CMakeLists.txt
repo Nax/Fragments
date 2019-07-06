@@ -37,5 +37,9 @@ target_compile_options(
     PRIVATE
     -f elf64
 )
+
+target_include_directories(boot_stage2 PUBLIC "${CMAKE_SOURCE_DIR}/include")
+target_include_directories(boot_stage2_32 PUBLIC "${CMAKE_SOURCE_DIR}/include")
+
 target_link_libraries(boot_stage2 boot_stage2_32)
 target_link_options(boot_stage2 PRIVATE -ffreestanding -nostdlib -T "${LINKER_SCRIPT}")
