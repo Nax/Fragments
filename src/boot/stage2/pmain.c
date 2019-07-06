@@ -1,7 +1,8 @@
 #include "stage2.h"
 
-void pmain(uint8_t drive, const MbrEntry* mbrEntry)
+void pmain(uint8_t drive, const FragmentsMbrEntry* mbrEntry)
 {
+    FragmentsKernelInfo kernelInfo;
     MfsPartition part;
     uint32_t inode;
 
@@ -13,7 +14,10 @@ void pmain(uint8_t drive, const MbrEntry* mbrEntry)
     putchar('\n');
     putchar('\n');
 
-    detect_memory();
+    kernelInfo.drive = drive;
+    memcpy(&kernelInfo.mbrEntry, mbrEntry, sizeof(*mbrEntry));
+
+    detect_memory(&kernelInfo);
 
     mfs_init(&part, drive, mbrEntry);
     inode = part.inodeRoot;
@@ -27,6 +31,8 @@ void pmain(uint8_t drive, const MbrEntry* mbrEntry)
     print("/boot/kernel inode: ");
     printhex32(inode);
     putchar('\n');
+
+    load_kernel(&kernelInfo, &part, inode);
 
     for (;;) {}
 }

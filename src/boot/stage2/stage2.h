@@ -1,22 +1,11 @@
 #ifndef STAGE2_H
 #define STAGE2_H
 
-#if defined(__GNUC__)
-# define PACKED     __attribute__ ((packed))
-# define ALIGN(x)   __attribute__ ((aligned (x)))
-# define SECTION(x) __attribute__ ((section (x)))
-#else
-# define PACKED
-# define ALIGN(x)
-# define SECTION(x)
-#endif
+#include <sys/fragments.h>
 
 #define SECTOR_SIZE         512
 #define CHUNK_SIZE          4096
 #define SECTORS_PER_CHUNK   (CHUNK_SIZE / SECTOR_SIZE)
-
-#include <stdint.h>
-#include <stddef.h>
 
 typedef struct {
     uint8_t     size;
@@ -36,22 +25,6 @@ typedef struct {
     uint32_t esi;
     uint32_t edi;
 } PACKED Regs;
-
-typedef struct {
-    uint64_t base;
-    uint64_t size;
-    uint32_t type;
-    uint32_t extended;
-} PACKED MemRegion;
-
-typedef struct {
-    uint8_t     status;
-    uint8_t     chsFirst[3];
-    uint8_t     type;
-    uint8_t     chsLast[3];
-    uint32_t    lbaFirst;
-    uint32_t    lbaLast;
-} PACKED MbrEntry;
 
 typedef struct {
     uint8_t     drive;
@@ -78,16 +51,23 @@ void printhex32(uint32_t value);
 void printhex64(uint64_t value);
 
 /* mem */
-void detect_memory(void);
+void    detect_memory(FragmentsKernelInfo* info);
+void*   alloc_page(FragmentsKernelInfo* info);
 
 /* disk.c */
 void disk_read_raw(void* dst, uint8_t drive, uint32_t src, uint16_t count);
 
 /* mfs */
-void        mfs_init(MfsPartition* part, uint8_t drive, const MbrEntry* mbrEntry);
+void        mfs_init(MfsPartition* part, uint8_t drive, const FragmentsMbrEntry* mbrEntry);
 uint32_t    mfs_seek_child(const MfsPartition* part, uint32_t parent, const char* name);
+void        mfs_read(char* dst, const MfsPartition* part, uint32_t inode);
+
+/* load */
+void        load_kernel(FragmentsKernelInfo* info, const MfsPartition* part, uint32_t inode);
 
 /* bios.asm */
 int bios(int num, Regs* regs);
+
+void enter_kernel(FragmentsKernelInfo* info, void* pagetable, uint32_t entryLo, uint32_t entryHi);
 
 #endif

@@ -3,7 +3,7 @@
 
 SECTION(".data16") ALIGN(16) static char gMfsDiskBuffer[4096];
 
-void mfs_init(MfsPartition* part, uint8_t drive, const MbrEntry* mbrEntry)
+void mfs_init(MfsPartition* part, uint8_t drive, const FragmentsMbrEntry* mbrEntry)
 {
     char superchunk[4096];
 
@@ -59,4 +59,10 @@ uint32_t mfs_seek_child(const MfsPartition* part, uint32_t parent, const char* n
         if (strncmp(nameStr, name, nameLen) == 0)
             return inode;
     }
+}
+
+void mfs_read_file(char* dst, const MfsPartition* part, uint32_t inode)
+{
+    disk_read_raw(gMfsDiskBuffer, part->drive, part->lbaStart + inode * SECTORS_PER_CHUNK, SECTORS_PER_CHUNK);
+    memcpy(dst, gMfsDiskBuffer, sizeof(gMfsDiskBuffer));
 }

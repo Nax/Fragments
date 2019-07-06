@@ -1,11 +1,12 @@
 #include "stage2.h"
 
-void detect_memory(void)
+void detect_memory(FragmentsKernelInfo* info)
 {
     int carry;
     Regs r;
-    MemRegion mem;
+    FragmentsMemRegion mem;
 
+    info->memRegionCount = 0;
     println("===== MEMORY MAP =====");
     r.ebx = 0;
     for (;;)
@@ -27,6 +28,32 @@ void detect_memory(void)
         putchar(' ');
         printhex32(mem.type);
         putchar('\n');
+
+        memcpy(info->memRegions + info->memRegionCount, &mem, sizeof(mem));
+        info->memRegionCount++;
     }
     println("======================\n");
+
+    for (size_t i = 0; i < info->memRegionCount; ++i)
+    {
+        FragmentsMemRegion* region;
+
+        region = &info->memRegions[i];
+        if (region->type == 1 && region->base >= 0x100000 && region->size >= 0x100000)
+        {
+            info->pageUseBase = region->base;
+            info->pageUseSize = 0;
+            break;
+        }
+    }
+}
+
+void* alloc_page(FragmentsKernelInfo* info)
+{
+    uint64_t page;
+
+    page = info->pageUseBase + info->pageUseSize;
+    info->pageUseSize += 0x1000;
+
+    return (void*)((uint32_t)page);
 }
