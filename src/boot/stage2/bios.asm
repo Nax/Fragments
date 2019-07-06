@@ -35,29 +35,10 @@ _bios_return:
 BITS 16
 SECTION .text16
 ALIGN 4
-_int_jump_table:
-    dw 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    dw _int10, 0, 0, _int13, 0, _int15
-
-;SECTION .text16
-_int10:
-    int 0x10
-    jmp _bios_after_call
-
-_int13:
-    int 0x13
-    jmp _bios_after_call
-
-_int15:
-    int 0x15
-    jmp _bios_after_call
-
 _bios_real_thunk:
-    ; Load int handler
-    mov     bx, [bp + 0x08]
-    shl     bx, 1
-    mov     ax, [_int_jump_table + bx]
-    push    ax
+    ; Load the int number
+    mov     ax, [bp + 0x08]
+    mov     [.int_number], al
 
     ; Load registers
     mov     bx, [bp + 0x0c]
@@ -69,9 +50,11 @@ _bios_real_thunk:
     mov     ebx, [bx + 0x04]
 
     ; Perform the bios call
-    ret
+    ; 0xcd 0xII is the encoding for int II
+    db 0xcd
+.int_number:
+    db 0x00
 
-_bios_after_call:
     jc .failure
     push DWORD 0
     jmp .return
