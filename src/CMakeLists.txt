@@ -13,9 +13,11 @@ add_custom_command(
         "${CMAKE_BINARY_DIR}/fragments.img"
         $<TARGET_FILE:boot_stage1>
         $<TARGET_FILE:boot_stage2>
+        $<TARGET_FILE:kernel>
     DEPENDS
         boot_stage1
         boot_stage2
+        kernel
         FragmentsUtils::mkimage
     VERBATIM
 )

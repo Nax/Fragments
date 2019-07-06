@@ -12,6 +12,7 @@ public:
 
     void setBootLoader1(const char* path);
     void setBootLoader2(const char* path);
+    void addFile(const char* inPath, const char* outPath);
     void serialize(const char* path);
 
 private:

@@ -46,6 +46,16 @@ void Image::setBootLoader2(const char* path)
     _bl2Data = loadFile(&_bl2Size, path);
 }
 
+void Image::addFile(const char* inPath, const char* outPath)
+{
+    char* data;
+    size_t size;
+
+    data = loadFile(&size, inPath);
+    _partition.createFile(outPath, data, size);
+    delete[] data;
+}
+
 void Image::serialize(const char* path)
 {
     uint8_t tmp8;

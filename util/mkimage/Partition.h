@@ -10,7 +10,8 @@ public:
     Partition(size_t size);
     ~Partition();
 
-    void serialize(FILE* out);
+    void    createFile(const char* path, const char* data, size_t size);
+    void    serialize(FILE* out);
 
 private:
     char*           getRawChunk(uint64_t chunkId);
@@ -24,6 +25,10 @@ private:
 
     uint64_t    dirLookup(uint64_t parent, const char* filename);
     void        dirWrite(uint64_t parent, const char* filename, uint64_t child);
+
+    uint64_t    makeChild(uint64_t parent, const char* name);
+    void        readFile(char* dst, uint64_t inode);
+    void        writeFile(uint64_t inode, const char* data, size_t size);
 
     size_t      _size;
     uint64_t    _root;
