@@ -8,7 +8,7 @@ SECTIONS
     .text16 : ALIGN(0x10) { *(.text16) }
     .text : ALIGN(0x10) { *(.text) }
     .data : ALIGN(0x10) { *(.data) }
-    .rodata : ALIGN(0x10) { *(.rodata) *(.rodata.*) }
-    .bss : ALIGN(0x10) { *(.bss) }
+    .rodata : ALIGN(0x10) { *(.rodata*) }
+    .bss : ALIGN(0x10) { *(.bss*) *(COMMON*) }
     /DISCARD/ : { *(*) }
 }

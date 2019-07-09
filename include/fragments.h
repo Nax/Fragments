@@ -14,6 +14,10 @@
 # define SECTION(x)
 #endif
 
+#define PAGESIZE    4096
+
+typedef uint64_t page_addr;
+
 typedef struct {
     uint64_t base;
     uint64_t size;
@@ -32,11 +36,13 @@ typedef struct {
 
 typedef struct {
     uint8_t             drive;
+    uint8_t             zero[7];
     FragmentsMbrEntry   mbrEntry;
-    size_t              memRegionCount;
+    uint32_t            memRegionCount;
+    uint32_t            padding;
     FragmentsMemRegion  memRegions[64];
     uint64_t            pageUseBase;
     uint64_t            pageUseSize;
-} FragmentsKernelInfo;
+} PACKED FragmentsKernelInfo;
 
 #endif

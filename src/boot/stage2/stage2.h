@@ -1,7 +1,7 @@
 #ifndef STAGE2_H
 #define STAGE2_H
 
-#include <sys/fragments.h>
+#include <fragments.h>
 
 #define SECTOR_SIZE         512
 #define CHUNK_SIZE          4096

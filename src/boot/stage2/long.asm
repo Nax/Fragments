@@ -14,7 +14,7 @@ GDT64:
     dw 0
     dw 0
     db 0
-    db 10011010b
+    db 10011000b
     db 10101111b
     db 0
 .Data:

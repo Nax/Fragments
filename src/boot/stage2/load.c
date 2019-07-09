@@ -18,10 +18,10 @@ static void _map_addr(FragmentsKernelInfo* info, void* pagetable, uint64_t flags
             memset(tmp, 0, PAGESIZE);
             dir[index] = ((uint32_t)tmp | 1);
         }
-        dir = ((uint64_t*)(dir[index] & ~(0xfff)));
+        dir = ((uint64_t*)(uintptr_t)(dir[index] & ~(0xfff)));
     }
     index = (virtual >> 12) & 0x1ff;
-    dir[index] = (((uint64_t)physical) | 1 | flags);
+    dir[index] = (((uintptr_t)physical) | 1 | flags);
 }
 
 static void _map_addr_range(FragmentsKernelInfo* info, void* pagetable, uint64_t flags, uint64_t virtual, void* physical, size_t size)
@@ -51,7 +51,7 @@ void load_kernel(FragmentsKernelInfo* info, const MfsPartition* part, uint32_t i
     }
 
     /* Recursively map the top level page table */
-    pagetable[510] = (uint64_t)pagetable | 0x03;
+    pagetable[510] = (uintptr_t)pagetable | 0x03;
 
     /* Load the kernel */
     /* Note: elf parser is rather crude */
