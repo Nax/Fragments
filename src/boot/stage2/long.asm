@@ -44,8 +44,6 @@ enter_kernel:
     or eax, 1 << 5
     mov cr4, eax
 
-    xchg bx, bx
-
     ; Set the LM bit
     mov ecx, 0xC0000080
     rdmsr

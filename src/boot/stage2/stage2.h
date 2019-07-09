@@ -5,6 +5,7 @@
 
 #define SECTOR_SIZE         512
 #define CHUNK_SIZE          4096
+#define PAGESIZE            4096
 #define SECTORS_PER_CHUNK   (CHUNK_SIZE / SECTOR_SIZE)
 
 typedef struct {
@@ -52,7 +53,7 @@ void printhex64(uint64_t value);
 
 /* mem */
 void    detect_memory(FragmentsKernelInfo* info);
-void*   alloc_page(FragmentsKernelInfo* info);
+void*   alloc_pages(FragmentsKernelInfo* info, size_t size);
 
 /* disk.c */
 void disk_read_raw(void* dst, uint8_t drive, uint32_t src, uint16_t count);
@@ -60,7 +61,8 @@ void disk_read_raw(void* dst, uint8_t drive, uint32_t src, uint16_t count);
 /* mfs */
 void        mfs_init(MfsPartition* part, uint8_t drive, const FragmentsMbrEntry* mbrEntry);
 uint32_t    mfs_seek_child(const MfsPartition* part, uint32_t parent, const char* name);
-void        mfs_read(char* dst, const MfsPartition* part, uint32_t inode);
+void        mfs_read(void* dst, const MfsPartition* part, uint32_t inode);
+void        mfs_read_file(void* dst, const MfsPartition* part, uint32_t fileInode, size_t off, size_t size);
 
 /* load */
 void        load_kernel(FragmentsKernelInfo* info, const MfsPartition* part, uint32_t inode);

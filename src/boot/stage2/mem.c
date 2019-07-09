@@ -48,12 +48,15 @@ void detect_memory(FragmentsKernelInfo* info)
     }
 }
 
-void* alloc_page(FragmentsKernelInfo* info)
+void* alloc_pages(FragmentsKernelInfo* info, size_t size)
 {
     uint64_t page;
+    uint64_t actualSize;
+
+    actualSize = (((size - 1) / PAGESIZE) + 1) * PAGESIZE;
 
     page = info->pageUseBase + info->pageUseSize;
-    info->pageUseSize += 0x1000;
+    info->pageUseSize += actualSize;
 
     return (void*)((uint32_t)page);
 }
