@@ -27,10 +27,6 @@ void pmem_init(void)
     PageAllocator* allocator;
     page_addr page;
 
-    __asm__ __volatile__ ("xchg %bx, %bx\r\n");
-
-    println("Test");
-
     allocator = &gKernel.pageAllocator;
     allocator->capacity = 500;
     allocator->stack = kmalloc(0, allocator->capacity * sizeof(page_addr));
