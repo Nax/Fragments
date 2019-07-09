@@ -13,19 +13,6 @@ typedef struct
     page_addr*  stack;
 } PageAllocator;
 
-typedef struct {
-    uint32_t    left;
-    uint32_t    right;
-    uint32_t    length;
-    uint32_t    flags;
-} KernelVMemNode;
-
-typedef struct
-{
-    size_t nodeCount;
-    size_t nodeCapacity;
-} VirtualAddressAllocator;
-
 typedef struct
 {
     uint32_t offset;
@@ -72,6 +59,7 @@ void    kfree(void* addr);
 /* pmem */
 void        pmem_init(void);
 page_addr   pmem_alloc_page(void);
+void        pmem_free_page(page_addr page);
 
 /* vmem */
 void vmem_map(void* vaddr, page_addr page, int flags);

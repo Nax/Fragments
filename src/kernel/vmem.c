@@ -33,6 +33,8 @@ static void _vmem_ensure_mapped(uint16_t a, uint16_t b, uint16_t c, uint16_t d)
 
 void vmem_map(void* vaddr, page_addr page, int flags)
 {
+    (void)flags;
+
     uint16_t a;
     uint16_t b;
     uint16_t c;
