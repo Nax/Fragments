@@ -48,6 +48,7 @@ typedef struct
 {
     FragmentsKernelInfo     bootInfo;
     PageAllocator           pageAllocator;
+    KernelMemoryAllocator   memoryAllocator;
     size_t                  heapSize;
 } KernelContext;
 

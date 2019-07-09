@@ -1,3 +1,4 @@
+#include <string.h>
 #include "kernel.h"
 
 #define KERNEL_HEAP_BASE    0xffffffffa0000000
@@ -55,8 +56,60 @@ static void* _allocBlock(size_t size)
 
 void* kmalloc(int flags, size_t size)
 {
-    void* block;
+    (void)flags;
 
+    KernelMemoryAllocator* allocator;
+    void* block;
+    size_t i;
+
+    allocator = &gKernel.memoryAllocator;
+    i = allocator->freeBlockCount;
+    while (i--)
+    {
+        if (allocator->freeBlocks[i].size >= size + sizeof(KernelBlockHeader))
+        {
+            /* Found a free block */
+            block = (void*)((uintptr_t)allocator->freeBlocks[i].offset | KERNEL_HEAP_BASE);
+            memcpy(allocator->freeBlocks + i, allocator->freeBlocks + i + 1, (allocator->freeBlockCount - i - 1) * sizeof(KernelFreeBlock));
+            allocator->freeBlockCount--;
+            return block;
+        }
+    }
     block = _allocBlock(size);
     return block;
+}
+
+void kfree(void* addr)
+{
+    size_t newCapacity;
+    KernelFreeBlock* oldStack;
+    KernelFreeBlock* newStack;
+
+    KernelMemoryAllocator* allocator;
+    KernelBlockHeader* block;
+
+    oldStack = NULL;
+
+    allocator = &gKernel.memoryAllocator;
+    block = (KernelBlockHeader*)addr;
+
+    if (allocator->freeBlockCount == allocator->freeBlockCapacity)
+    {
+        if (!allocator->freeBlockCapacity)
+            newCapacity = 128;
+        else
+            newCapacity = allocator->freeBlockCapacity + allocator->freeBlockCapacity / 2;
+        oldStack = allocator->freeBlocks;
+        newStack = kmalloc(0, newCapacity * sizeof(*allocator->freeBlocks));
+        memcpy(newStack, oldStack, allocator->freeBlockCapacity * sizeof(*allocator->freeBlocks));
+        allocator->freeBlockCapacity = newCapacity;
+        allocator->freeBlocks = newStack;
+    }
+
+    allocator->freeBlocks[allocator->freeBlockCount].offset = (uintptr_t)addr & 0xffffffff;
+    allocator->freeBlocks[allocator->freeBlockCount].size = block[-1].size;
+    allocator->freeBlockCount++;
+
+    if (oldStack)
+        kfree(oldStack);
 }
