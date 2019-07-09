@@ -72,6 +72,8 @@ void mfs_read_file(void* dst, const MfsPartition* part, uint32_t fileInode, size
     size_t chunkIndex;
     size_t startOff;
     size_t readSize;
+    uint32_t inode;
+    int loadedIndirect;
 
     if (size == 0)
         return;
@@ -80,6 +82,7 @@ void mfs_read_file(void* dst, const MfsPartition* part, uint32_t fileInode, size
     chunkLast = (off + size - 1) / MFS_CHUNK;
     chunkCount = chunkLast - chunkFirst + 1;
     startOff = off % MFS_CHUNK;
+    loadedIndirect = 0;
 
     mfs_read((char*)&fileChunk, part, fileInode);
     for (size_t i = 0; i < chunkCount; ++i)
@@ -99,6 +102,23 @@ void mfs_read_file(void* dst, const MfsPartition* part, uint32_t fileInode, size
             else
             {
                 mfs_read(gMfsIndirectBuffer[0], part, fileChunk.data[chunkIndex]);
+                memcpy(dst, gMfsIndirectBuffer[0] + startOff, readSize);
+                startOff = 0;
+            }
+        }
+        else if (chunkIndex < 16 + 512)
+        {
+            if (!loadedIndirect)
+            {
+                mfs_read(gMfsIndirectBuffer[1], part, fileChunk.idata);
+                loadedIndirect = 1;
+            }
+            memcpy(&inode, gMfsIndirectBuffer[1] + (chunkIndex - 16) * 8, 4);
+            if (readSize == MFS_CHUNK)
+                mfs_read(dst, part, inode);
+            else
+            {
+                mfs_read(gMfsIndirectBuffer[0], part, inode);
                 memcpy(dst, gMfsIndirectBuffer[0] + startOff, readSize);
                 startOff = 0;
             }
