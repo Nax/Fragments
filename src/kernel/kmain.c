@@ -14,6 +14,8 @@ void kmain(FragmentsKernelInfo* info)
 
     pmem_init();
     gdt_init();
+    irq_init();
+    irq_disable_all();
 
-    for (;;) {}
+    kernel_wait();
 }

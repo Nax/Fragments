@@ -61,5 +61,6 @@ _start:
 
 SECTION .bss
 ALIGN 16
-kernel_stack_bottom: resb 0x1000
+GLOBAL kernel_stack_top
+kernel_stack_bottom: resb 0x4000
 kernel_stack_top:

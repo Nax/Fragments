@@ -4,15 +4,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#if defined(__GNUC__)
-# define PACKED     __attribute__ ((packed))
-# define ALIGN(x)   __attribute__ ((aligned (x)))
-# define SECTION(x) __attribute__ ((section (x)))
-#else
-# define PACKED
-# define ALIGN(x)
-# define SECTION(x)
-#endif
+#define PACKED     __attribute__ ((packed))
+#define ALIGN(x)   __attribute__ ((aligned (x)))
+#define SECTION(x) __attribute__ ((section (x)))
 
 #define PAGESIZE    4096
 

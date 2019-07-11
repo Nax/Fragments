@@ -5,6 +5,7 @@
 #include <fragments.h>
 
 #define VMEM_USED   0x00000001
+#define ASM         __asm__ __volatile__
 
 typedef struct
 {
@@ -41,6 +42,51 @@ typedef struct
 
 extern KernelContext gKernel;
 
+/* io ports */
+static inline uint8_t in8(uint16_t port)
+{
+    uint8_t value;
+
+    ASM("in %1, %0\r\n" : "=a"(value) : "Nd"(port));
+    return value;
+}
+
+static inline uint8_t in16(uint16_t port)
+{
+    uint16_t value;
+
+    ASM("in %1, %0\r\n" : "=a"(value) : "Nd"(port));
+    return value;
+}
+
+static inline uint8_t in32(uint16_t port)
+{
+    uint32_t value;
+
+    ASM("in %1, %0\r\n" : "=a"(value) : "Nd"(port));
+    return value;
+}
+
+static inline void out8(uint16_t port, uint8_t value)
+{
+    ASM("out %0, %1\r\n" :: "a"(value), "Nd"(port));
+}
+
+static inline void out16(uint16_t port, uint16_t value)
+{
+    ASM("out %0, %1\r\n" :: "a"(value), "Nd"(port));
+}
+
+static inline void out32(uint16_t port, uint32_t value)
+{
+    ASM("out %0, %1\r\n" :: "a"(value), "Nd"(port));
+}
+
+static inline void io_wait(void)
+{
+    out8(0x80, 0);
+}
+
 /* print */
 void clear_screen(void);
 void putchar(int c);
@@ -67,5 +113,14 @@ void vmem_map(void* vaddr, page_addr page, int flags);
 /* gdt */
 void gdt_init(void);
 void gdt_load(const void* gdtEntries, size_t count);
+
+/* wait */
+void kernel_wait(void);
+
+/* irq */
+void irq_init(void);
+void irq_disable_all(void);
+void irq_enable(int line);
+void irq_disable(int line);
 
 #endif
