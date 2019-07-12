@@ -77,6 +77,7 @@ typedef struct _KernelThreadContext
 
 typedef struct
 {
+    uint16_t*               screen;
     FragmentsKernelInfo     bootInfo;
     PageAllocator           pageAllocator;
     KernelMemoryAllocator   memoryAllocator;
@@ -85,6 +86,13 @@ typedef struct
 } KernelContext;
 
 extern KernelContext gKernel;
+
+inline static size_t page_size_round(size_t size)
+{
+    if (size == 0)
+        return 0;
+    return (((size - 1) / PAGESIZE) + 1) * PAGESIZE;
+}
 
 /* print */
 void clear_screen(void);
@@ -108,7 +116,8 @@ page_addr   pmem_alloc_page(void);
 void        pmem_free_page(page_addr page);
 
 /* vmem */
-void vmem_map(void* vaddr, page_addr page, int flags);
+void    vmem_map(void* vaddr, page_addr page, int flags);
+void*   vmem_io_map(page_addr base, size_t size);
 
 /* gdt */
 void gdt_init(void);

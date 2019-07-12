@@ -37,6 +37,7 @@ static void kernel_threads_enter(int threadId)
 
 void kmain(FragmentsKernelInfo* info)
 {
+    gKernel.screen = (uint16_t*)0xb8000;
     memcpy(&gKernel.bootInfo, info, sizeof(gKernel.bootInfo));
 
     clear_screen();
@@ -45,6 +46,10 @@ void kmain(FragmentsKernelInfo* info)
     putchar('\n');
 
     pmem_init();
+
+    gKernel.screen = vmem_io_map(0xb8000, 80 * 25 * 2);
+    println("Screen buffer relocated");
+
     gdt_init();
     kernel_threads_init();
     kernel_threads_enter(0);

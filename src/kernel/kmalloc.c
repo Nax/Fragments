@@ -3,13 +3,6 @@
 
 #define KERNEL_HEAP_BASE    0xffffffffa0000000
 
-static size_t _roundPagesize(size_t size)
-{
-    if (size == 0)
-        return 0;
-    return (((size - 1) / PAGESIZE) + 1) * PAGESIZE;
-}
-
 void* kheap_alloc(size_t size)
 {
     size_t fixedSize;
@@ -17,7 +10,7 @@ void* kheap_alloc(size_t size)
 
     if (size == 0)
         return NULL;
-    fixedSize = _roundPagesize(size);
+    fixedSize = page_size_round(size);
     vaddr = KERNEL_HEAP_BASE + gKernel.heapSize;
     gKernel.heapSize += fixedSize;
 
@@ -31,7 +24,7 @@ void* kmalloc_raw(size_t size)
     page_addr page;
 
     vaddr = kheap_alloc(size);
-    pageCount = _roundPagesize(size) / PAGESIZE;
+    pageCount = page_size_round(size) / PAGESIZE;
 
     for (size_t i = 0; i < pageCount; ++i)
     {
@@ -47,7 +40,7 @@ static void* _allocBlock(size_t size)
     size_t heapSize;
     KernelBlockHeader* block;
 
-    heapSize = _roundPagesize(size + sizeof(KernelBlockHeader));
+    heapSize = page_size_round(size + sizeof(KernelBlockHeader));
     block = ((KernelBlockHeader*)kmalloc_raw(heapSize)) + 1;
     block[-1].size = (uint32_t)heapSize;
 

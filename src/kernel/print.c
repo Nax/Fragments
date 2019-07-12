@@ -6,11 +6,10 @@
 
 static int x = 0;
 static int y = 0;
-static uint16_t* const screen = (uint16_t*)0xb8000;
 
 void clear_screen(void)
 {
-    memset(screen, 0, SCREEN_X * SCREEN_Y * 2);
+    memset(gKernel.screen, 0, SCREEN_X * SCREEN_Y * 2);
     x = 0;
     y = 0;
 }
@@ -26,7 +25,7 @@ void putchar(int c)
     else
     {
         value = 0x0F00 | (c & 0xff);
-        screen[x + SCREEN_X * y] = value;
+        gKernel.screen[x + SCREEN_X * y] = value;
         x++;
     }
     if (x >= SCREEN_X)

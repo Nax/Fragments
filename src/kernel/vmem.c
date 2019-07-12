@@ -53,3 +53,14 @@ void vmem_map(void* vaddr, page_addr page, int flags)
     pageSlot = _recursivePagePointer(a, b, c, d);
     *pageSlot = (page | 1);
 }
+
+void* vmem_io_map(page_addr base, size_t size)
+{
+    void* addr;
+
+    size = page_size_round(size);
+    addr = kheap_alloc(size);
+    for (size_t i = 0; i < size / PAGESIZE; ++i)
+        vmem_map((char*)addr + PAGESIZE * i, base + PAGESIZE * i, 0);
+    return addr;
+}
