@@ -34,24 +34,24 @@ static void _map_addr_range(FragmentsKernelInfo* info, void* pagetable, uint64_t
         _map_addr(info, pagetable, flags, virtual + i * PAGESIZE, (char*)physical + i * PAGESIZE);
 }
 
-void load_kernel(FragmentsKernelInfo* info, const MfsPartition* part, uint32_t inode)
+static void load_image(FragmentsKernelInfo* info, uint64_t* pagetable, const MfsPartition* part, uint32_t inode)
+{
+    char tmp[MFS_CHUNK];
+    MfsFileChunk* file;
+
+    (void)pagetable;
+    mfs_read(tmp, part, inode);
+    file = (MfsFileChunk*)tmp;
+    info->kimageSize = file->size;
+    info->kimage = alloc_pages(info, info->kimageSize);
+    mfs_read_file(info->kimage, part, inode, 0, info->kimageSize);
+}
+
+static void load_kernel(FragmentsKernelInfo* info, uint64_t* pagetable, const MfsPartition* part, uint32_t inode)
 {
     Elf64_Ehdr  ehdr;
     Elf64_Phdr  phdr;
-    uint64_t*   pagetable;
     void*       tmp;
-
-    pagetable = alloc_pages(info, PAGESIZE);
-    memset(pagetable, 0, PAGESIZE);
-
-    /* Identity map the first 16 megabyte */
-    for (int i = 0; i < 256 * 16; ++i)
-    {
-        _map_addr(info, pagetable, 0x02, i * 0x1000, (void*)(i * 0x1000));
-    }
-
-    /* Recursively map the top level page table */
-    pagetable[510] = (uintptr_t)pagetable | 0x03;
 
     /* Load the kernel */
     /* Note: elf parser is rather crude */
@@ -66,4 +66,24 @@ void load_kernel(FragmentsKernelInfo* info, const MfsPartition* part, uint32_t i
     }
 
     enter_kernel(info, pagetable, ehdr.e_entry & 0xffffffff, ehdr.e_entry >> 32);
+}
+
+void load(FragmentsKernelInfo* info, const MfsPartition* part, uint32_t inodeKernel, uint32_t inodeImage)
+{
+    uint64_t*   pagetable;
+
+    pagetable = alloc_pages(info, PAGESIZE);
+    memset(pagetable, 0, PAGESIZE);
+
+    /* Identity map the first 16 megabyte */
+    for (int i = 0; i < 256 * 16; ++i)
+    {
+        _map_addr(info, pagetable, 0x02, i * 0x1000, (void*)(i * 0x1000));
+    }
+
+    /* Recursively map the top level page table */
+    pagetable[510] = (uintptr_t)pagetable | 0x03;
+
+    load_image(info, pagetable, part, inodeImage);
+    load_kernel(info, pagetable, part, inodeKernel);
 }

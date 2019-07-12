@@ -5,6 +5,8 @@ void pmain(uint8_t drive, const FragmentsMbrEntry* mbrEntry)
     FragmentsKernelInfo kernelInfo;
     MfsPartition part;
     uint32_t inode;
+    uint32_t inodeKernel;
+    uint32_t inodeImage;
 
     println("Bootloader loaded!");
     print("Booting from drive ");
@@ -27,12 +29,17 @@ void pmain(uint8_t drive, const FragmentsMbrEntry* mbrEntry)
     printhex32(inode);
     putchar('\n');
 
-    inode = mfs_seek_child(&part, inode, "kernel");
+    inodeKernel = mfs_seek_child(&part, inode, "kernel");
     print("/boot/kernel inode: ");
-    printhex32(inode);
+    printhex32(inodeKernel);
     putchar('\n');
 
-    load_kernel(&kernelInfo, &part, inode);
+    inodeImage = mfs_seek_child(&part, inode, "kimage");
+    print("/boot/kimage inode: ");
+    printhex32(inodeImage);
+    putchar('\n');
+
+    load(&kernelInfo, &part, inodeKernel, inodeImage);
 
     for (;;) {}
 }

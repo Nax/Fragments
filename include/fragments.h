@@ -37,6 +37,8 @@ typedef struct {
     FragmentsMemRegion  memRegions[64];
     uint64_t            pageUseBase;
     uint64_t            pageUseSize;
+    char*               kimage;
+    uint64_t            kimageSize;
 } PACKED FragmentsKernelInfo;
 
 #endif

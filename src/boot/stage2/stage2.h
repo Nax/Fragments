@@ -65,7 +65,7 @@ void        mfs_read(void* dst, const MfsPartition* part, uint32_t inode);
 void        mfs_read_file(void* dst, const MfsPartition* part, uint32_t fileInode, size_t off, size_t size);
 
 /* load */
-void        load_kernel(FragmentsKernelInfo* info, const MfsPartition* part, uint32_t inode);
+void        load(FragmentsKernelInfo* info, const MfsPartition* part, uint32_t inodeKernel, uint32_t inodeImage);
 
 /* bios.asm */
 int bios(int num, Regs* regs);
