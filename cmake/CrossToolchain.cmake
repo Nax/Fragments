@@ -17,3 +17,4 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
 
 set(COMPILE_OPTIONS_FREESTANDING -ffreestanding -nostdlib -lgcc)
 set(COMPILE_OPTIONS_KERNEL ${COMPILE_OPTIONS_FREESTANDING} -mcmodel=kernel -mno-red-zone)
+set(COMPILE_OPTIONS_USERLAND -ffreestanding)
