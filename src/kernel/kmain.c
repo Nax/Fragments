@@ -51,6 +51,7 @@ void kmain(FragmentsKernelInfo* info)
     println("Screen buffer relocated");
 
     gdt_init();
+    vmem_unmap_lower();
     kernel_threads_init();
     kernel_threads_enter(0);
     irq_init();

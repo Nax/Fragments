@@ -118,6 +118,7 @@ void        pmem_free_page(page_addr page);
 /* vmem */
 void    vmem_map(void* vaddr, page_addr page, int flags);
 void*   vmem_io_map(page_addr base, size_t size);
+void    vmem_unmap_lower(void);
 
 /* gdt */
 void gdt_init(void);

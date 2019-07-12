@@ -64,3 +64,62 @@ void* vmem_io_map(page_addr base, size_t size)
         vmem_map((char*)addr + PAGESIZE * i, base + PAGESIZE * i, 0);
     return addr;
 }
+
+static void _freePageInMap(page_addr* addr)
+{
+    page_addr cleanPage;
+
+    cleanPage = *addr & ~(0xfff);
+    *addr = 0;
+    pmem_free_page(cleanPage);
+}
+
+void vmem_unmap_lower(void)
+{
+    uint16_t a;
+    uint16_t b;
+    uint16_t c;
+    uint16_t d;
+    page_addr* pageA;
+    page_addr* pageB;
+    page_addr* pageC;
+    page_addr* pageD;
+
+    for (a = 0; a < 256; ++a)
+    {
+        pageA = _recursivePagePointer(PAGE_RECURSE, PAGE_RECURSE, PAGE_RECURSE, a);
+        if (*pageA)
+        {
+            for (b = 0; b < 512; ++b)
+            {
+                pageB = _recursivePagePointer(PAGE_RECURSE, PAGE_RECURSE, a, b);
+                if (*pageB)
+                {
+                    for (c = 0; c < 512; ++c)
+                    {
+                        pageC = _recursivePagePointer(PAGE_RECURSE, a, b, c);
+                        if (*pageC)
+                        {
+                            for (d = 0; d < 512; ++d)
+                            {
+                                pageD = _recursivePagePointer(a, b, c, d);
+                                if (*pageD)
+                                    _freePageInMap(pageD);
+                            }
+                            _freePageInMap(pageC);
+                        }
+                    }
+                    _freePageInMap(pageB);
+                }
+            }
+            _freePageInMap(pageA);
+        }
+    }
+
+    /* Force a TLB flush */
+    __asm__ __volatile__ (
+        "mov %%cr3, %%rax\r\n"
+        "mov %%rax, %%cr3\r\n"
+        ::: "rax"
+    );
+}
