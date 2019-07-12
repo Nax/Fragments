@@ -50,6 +50,10 @@ void kmain(FragmentsKernelInfo* info)
     kernel_threads_enter(0);
     irq_init();
     irq_disable_all();
+    idt_init();
+
+    idt_register(0x21, 0, &int_handler_keyboard);
+    irq_enable(1);
 
     kernel_wait();
 }

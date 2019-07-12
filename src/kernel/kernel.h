@@ -124,4 +124,11 @@ void irq_disable_all(void);
 void irq_enable(int line);
 void irq_disable(int line);
 
+/* idt */
+void idt_init(void);
+void idt_register(uint8_t index, uint8_t ist, void* handler);
+
+/* int handlers */
+void int_handler_keyboard(void);
+
 #endif
