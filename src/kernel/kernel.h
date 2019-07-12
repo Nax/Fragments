@@ -8,10 +8,14 @@
 #define ASM         __asm__ __volatile__
 
 #define GDT_CODE_RING0  0x08
+#define GDT_CODE_RING3  0x10
 #define GDT_TSS_BASE    0x30
 
 #define DESC_TYPE_TSS        0x9
 #define DESC_TYPE_INTERRUPT  0xe
+
+#define PROCESS_STATUS_NORMAL   0x00
+#define PROCESS_STATUS_SYSCALL  0x01
 
 typedef struct
 {
@@ -68,12 +72,41 @@ typedef struct {
     uint16_t    iopb;
 } PACKED Tss;
 
+typedef struct {
+    uint64_t    rax;            /* 0x00 */
+    uint64_t    rbx;            /* 0x08 */
+    uint64_t    rcx;            /* 0x10 */
+    uint64_t    rdx;            /* 0x18 */
+    uint64_t    rdi;            /* 0x20 */
+    uint64_t    rsi;            /* 0x28 */
+    uint64_t    rsp;            /* 0x30 */
+    uint64_t    rbp;            /* 0x38 */
+    uint64_t    r8;             /* 0x40 */
+    uint64_t    r9;             /* 0x48 */
+    uint64_t    r10;            /* 0x50 */
+    uint64_t    r11;            /* 0x58 */
+    uint64_t    r12;            /* 0x60 */
+    uint64_t    r13;            /* 0x68 */
+    uint64_t    r14;            /* 0x70 */
+    uint64_t    r15;            /* 0x78 */
+    uint64_t    rip;            /* 0x80 */
+    uint64_t    rflags;         /* 0x88 */
+    char        fxdata[512];    /* 0x90 */
+} PACKED CpuState;
+
+typedef struct {
+    CpuState    state;
+    uint32_t    nextProcess;
+    uint32_t    prevProcess;
+    uint32_t    status;
+} PACKED ProcessData;
+
 typedef struct _KernelThreadContext
 {
     struct _KernelThreadContext*    ctx;
     void*                           stack;
     Tss*                            tss;
-} KernelThreadContext;
+} PACKED KernelThreadContext;
 
 typedef struct
 {
