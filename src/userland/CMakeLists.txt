@@ -10,3 +10,4 @@ target_compile_options(
 target_include_directories(vfsd PUBLIC "${CMAKE_SOURCE_DIR}/include")
 target_link_options(vfsd PRIVATE -ffreestanding -nostdlib -z max-page-size=0x1000 -T "${LINKER_SCRIPT}")
 target_link_libraries(vfsd ${CRT0} ${CRTI} ${CRTN} libc gcc)
+install(TARGETS vfsd RUNTIME DESTINATION root/sbin)

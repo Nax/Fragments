@@ -8,6 +8,19 @@ add_subdirectory(userland)
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/" DESTINATION include)
 
 add_custom_command(
+    OUTPUT "${CMAKE_BINARY_DIR}/kimage"
+    COMMAND
+        FragmentsUtils::mkrdisk
+        "${CMAKE_BINARY_DIR}/kimage"
+        "sbin/vfsd"
+        $<TARGET_FILE:vfsd>
+    DEPENDS
+        vfsd
+        FragmentsUtils::mkrdisk
+    VERBATIM
+)
+
+add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/fragments.img"
     COMMAND
         FragmentsUtils::mkimage
@@ -25,7 +38,7 @@ add_custom_command(
 
 add_custom_target(
     image ALL
-    DEPENDS "${CMAKE_BINARY_DIR}/fragments.img"
+    DEPENDS "${CMAKE_BINARY_DIR}/fragments.img" "${CMAKE_BINARY_DIR}/kimage"
 )
 
 install(FILES "${CMAKE_BINARY_DIR}/fragments.img" DESTINATION .)
