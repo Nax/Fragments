@@ -24,7 +24,7 @@ void* kheap_alloc(size_t size)
     return (void*)vaddr;
 }
 
-static void* _heapAllocBacked(size_t size)
+void* kmalloc_raw(size_t size)
 {
     void* vaddr;
     size_t pageCount;
@@ -48,7 +48,7 @@ static void* _allocBlock(size_t size)
     KernelBlockHeader* block;
 
     heapSize = _roundPagesize(size + sizeof(KernelBlockHeader));
-    block = ((KernelBlockHeader*)_heapAllocBacked(heapSize)) + 1;
+    block = ((KernelBlockHeader*)kmalloc_raw(heapSize)) + 1;
     block[-1].size = (uint32_t)heapSize;
 
     return block;

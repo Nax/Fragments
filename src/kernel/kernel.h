@@ -7,6 +7,12 @@
 #define VMEM_USED   0x00000001
 #define ASM         __asm__ __volatile__
 
+#define GDT_CODE_RING0  0x08
+#define GDT_TSS_BASE    0x30
+
+#define DESC_TYPE_TSS        0x9
+#define DESC_TYPE_INTERRUPT  0xe
+
 typedef struct
 {
     size_t      count;
@@ -32,60 +38,53 @@ typedef struct
     KernelFreeBlock*    freeBlocks;
 } KernelMemoryAllocator;
 
+typedef struct {
+    uint32_t    reserved0;
+    uint32_t    rsp0Lo;
+    uint32_t    rsp0Hi;
+    uint32_t    rsp1Lo;
+    uint32_t    rsp1Hi;
+    uint32_t    rsp2Lo;
+    uint32_t    rsp2Hi;
+    uint32_t    reserved1;
+    uint32_t    reserved2;
+    uint32_t    ist1Lo;
+    uint32_t    ist1Hi;
+    uint32_t    ist2Lo;
+    uint32_t    ist2Hi;
+    uint32_t    ist3Lo;
+    uint32_t    ist3Hi;
+    uint32_t    ist4Lo;
+    uint32_t    ist4Hi;
+    uint32_t    ist5Lo;
+    uint32_t    ist5Hi;
+    uint32_t    ist6Lo;
+    uint32_t    ist6Hi;
+    uint32_t    ist7Lo;
+    uint32_t    ist7Hi;
+    uint32_t    reserved3;
+    uint32_t    reserved4;
+    uint16_t    reserved5;
+    uint16_t    iopb;
+} PACKED Tss;
+
+typedef struct _KernelThreadContext
+{
+    struct _KernelThreadContext*    ctx;
+    void*                           stack;
+    Tss*                            tss;
+} KernelThreadContext;
+
 typedef struct
 {
     FragmentsKernelInfo     bootInfo;
     PageAllocator           pageAllocator;
     KernelMemoryAllocator   memoryAllocator;
     size_t                  heapSize;
+    KernelThreadContext*    kernelThreads;
 } KernelContext;
 
 extern KernelContext gKernel;
-
-/* io ports */
-static inline uint8_t in8(uint16_t port)
-{
-    uint8_t value;
-
-    ASM("in %1, %0\r\n" : "=a"(value) : "Nd"(port));
-    return value;
-}
-
-static inline uint8_t in16(uint16_t port)
-{
-    uint16_t value;
-
-    ASM("in %1, %0\r\n" : "=a"(value) : "Nd"(port));
-    return value;
-}
-
-static inline uint8_t in32(uint16_t port)
-{
-    uint32_t value;
-
-    ASM("in %1, %0\r\n" : "=a"(value) : "Nd"(port));
-    return value;
-}
-
-static inline void out8(uint16_t port, uint8_t value)
-{
-    ASM("out %0, %1\r\n" :: "a"(value), "Nd"(port));
-}
-
-static inline void out16(uint16_t port, uint16_t value)
-{
-    ASM("out %0, %1\r\n" :: "a"(value), "Nd"(port));
-}
-
-static inline void out32(uint16_t port, uint32_t value)
-{
-    ASM("out %0, %1\r\n" :: "a"(value), "Nd"(port));
-}
-
-static inline void io_wait(void)
-{
-    out8(0x80, 0);
-}
 
 /* print */
 void clear_screen(void);
@@ -99,6 +98,7 @@ void printhex64(uint64_t value);
 
 /* kmalloc */
 void*   kheap_alloc(size_t size);
+void*   kmalloc_raw(size_t size);
 void*   kmalloc(int flags, size_t size);
 void    kfree(void* addr);
 
@@ -112,7 +112,8 @@ void vmem_map(void* vaddr, page_addr page, int flags);
 
 /* gdt */
 void gdt_init(void);
-void gdt_load(const void* gdtEntries, size_t count);
+void gdt_load(const void* gdtEntries, size_t count, uint16_t codeSeg);
+void gdt_describe_tss(uint16_t index, Tss* tss, size_t size);
 
 /* wait */
 void kernel_wait(void);

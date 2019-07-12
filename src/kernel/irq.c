@@ -1,3 +1,4 @@
+#include <sys/io.h>
 #include "kernel.h"
 
 #define PIC1_COMMAND    0x0020

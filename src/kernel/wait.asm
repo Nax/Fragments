@@ -6,8 +6,13 @@ EXTERN kernel_stack_top
 SECTION .text
 GLOBAL kernel_wait
 kernel_wait:
-    ; Reset the kernel stack
-    mov rsp, kernel_stack_top
+    ; Prevent a race condition with GS
+    cli
+
+    ; Get the local kernel stack
+    swapgs
+    mov rsp, [gs:0x08]
+    swapgs
 
     ; Enable interrupts
     sti

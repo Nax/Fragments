@@ -13,22 +13,20 @@ GLOBAL gdt_load
 
 ; RDI: A pointer to GDT entries
 ; RSI: A count of entries
+; RDX: The new code segment
 gdt_load:
-    shl esi, 3
-    dec esi
-
     mov [GDT.Pointer], rdi
     mov [GDT.Size], si
 
     lgdt [GDT]
 
     ; Force a CS reload
-    push QWORD 0x08
+    push QWORD rdx
     push QWORD gdt_loaded
     retfq
 
 gdt_loaded:
-    mov eax, 0x10
+    xor eax, eax
     mov ds, ax
     mov es, ax
     mov fs, ax
