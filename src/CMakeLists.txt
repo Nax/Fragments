@@ -28,7 +28,9 @@ add_custom_command(
         $<TARGET_FILE:boot_stage1>
         $<TARGET_FILE:boot_stage2>
         $<TARGET_FILE:kernel>
+        "${CMAKE_BINARY_DIR}/kimage"
     DEPENDS
+        "${CMAKE_BINARY_DIR}/kimage"
         boot_stage1
         boot_stage2
         kernel
@@ -38,7 +40,7 @@ add_custom_command(
 
 add_custom_target(
     image ALL
-    DEPENDS "${CMAKE_BINARY_DIR}/fragments.img" "${CMAKE_BINARY_DIR}/kimage"
+    DEPENDS "${CMAKE_BINARY_DIR}/fragments.img"
 )
 
 install(FILES "${CMAKE_BINARY_DIR}/fragments.img" DESTINATION .)

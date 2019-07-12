@@ -114,20 +114,40 @@ void Partition::makeRoot()
 
 uint64_t Partition::makeChild(uint64_t parent, const char* name)
 {
+    size_t i;
+    size_t dataLen;
     uint64_t child;
     uint16_t len;
+    uint16_t len2;
     MfsFileChunk* dir;
     char* data;
 
-    child = allocChunk();
     dir = getFileChunk(parent);
     if (dir->data[0] == 0)
         dir->data[0] = allocChunk();
     data = getChunk(dir->data[0]);
+    dataLen = dir->size;
     len = strlen(name);
-    memcpy(data, &len, 2);
-    memcpy(data + 2, name, len);
-    memcpy(data + 2 + len, &child, 8);
+    i = 0;
+    for (;;)
+    {
+        if (i >= dataLen)
+            break;
+        memcpy(&len2, data + i, 2);
+        i += 2;
+        if (len == len2 && strncmp(data + i, name, len) == 0)
+        {
+            i += len;
+            memcpy(&child, data + i, 8);
+            return child;
+        }
+        i += len2;
+        i += 8;
+    }
+    child = allocChunk();
+    memcpy(data + i, &len, 2);
+    memcpy(data + i + 2, name, len);
+    memcpy(data + i + 2 + len, &child, 8);
     dir->size += (len + 10);
     return child;
 }

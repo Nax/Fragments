@@ -8,6 +8,7 @@ int main(int argc, char** argv)
     image->setBootLoader1(argv[2]);
     image->setBootLoader2(argv[3]);
     image->addFile(argv[4], "boot/kernel");
+    image->addFile(argv[5], "boot/kimage");
     image->serialize(argv[1]);
     delete image;
     return 0;
