@@ -23,6 +23,7 @@ static void kernel_threads_init()
         kthread->tss->rsp0Hi = ((uint64_t)kthread->stack) >> 32;
         kthread->tss->iopb = sizeof(Tss);
         gdt_describe_tss(GDT_TSS_BASE + i * 0x10, kthread->tss, sizeof(Tss) - 1);
+        kthread->tmpPageAddr = kheap_alloc(PAGESIZE);
     }
 }
 
@@ -44,22 +45,31 @@ void kmain(FragmentsKernelInfo* info)
     println("Hello world from the kernel!");
     printhex8(gKernel.bootInfo.drive);
     putchar('\n');
+    printhex64((uint64_t)gKernel.bootInfo.kimage);
+    putchar('\n');
 
     pmem_init();
-
+    kimage_init();
     gKernel.screen = vmem_io_map(0xb8000, 80 * 25 * 2);
     println("Screen buffer relocated");
-
     gdt_init();
-    vmem_unmap_lower();
+    println("GDT Initialized");
+    //vmem_unmap_lower();
     kernel_threads_init();
+    println("Kernel Thread Loaded");
     kernel_threads_enter(0);
+    println("Kernel Thread Entered");
     irq_init();
+    println("IRQ Initialized");
     irq_disable_all();
     idt_init();
+    println("IDT Initialized");
 
     idt_register(0x21, 0, &int_handler_keyboard);
-    irq_enable(1);
+    //irq_enable(1);
+
+    printhex64((uint64_t)kimage_open("sbin/vfsd"));
+    putchar('\n');
 
     kernel_wait();
 }

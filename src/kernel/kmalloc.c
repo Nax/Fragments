@@ -2,6 +2,7 @@
 #include "kernel.h"
 
 #define KERNEL_HEAP_BASE    0xffffffffa0000000
+#define KERNEL_HEAP_MASK    0xffffffff00000000
 
 void* kheap_alloc(size_t size)
 {
@@ -12,7 +13,7 @@ void* kheap_alloc(size_t size)
         return NULL;
     fixedSize = page_size_round(size);
     vaddr = KERNEL_HEAP_BASE + gKernel.heapSize;
-    gKernel.heapSize += fixedSize;
+    gKernel.heapSize += fixedSize + PAGESIZE;
 
     return (void*)vaddr;
 }
@@ -47,11 +48,31 @@ static void* _allocBlock(size_t size)
     return block;
 }
 
+/*
+static void _dumpFreeBlocks(void)
+{
+    print("malloc free block stack: ");
+    printhex64(gKernel.memoryAllocator.freeBlocks);
+    putchar('\n');
+    print("===== FREE BLOCKS =====\n");
+    for (size_t i = 0; i < gKernel.memoryAllocator.freeBlockCount; ++i)
+    {
+        printhex8((uint8_t)i);
+        print(": ");
+        printhex32(gKernel.memoryAllocator.freeBlocks[i].size);
+        print(" ");
+        printhex32(gKernel.memoryAllocator.freeBlocks[i].offset);
+        putchar('\n');
+    }
+    print("=======================\n\n");
+}
+*/
+
 void* kmalloc(int flags, size_t size)
 {
     (void)flags;
 
-    KernelMemoryAllocator* allocator;
+    volatile KernelMemoryAllocator* allocator;
     void* block;
     size_t i;
 
@@ -62,8 +83,8 @@ void* kmalloc(int flags, size_t size)
         if (allocator->freeBlocks[i].size >= size + sizeof(KernelBlockHeader))
         {
             /* Found a free block */
-            block = (void*)((uintptr_t)allocator->freeBlocks[i].offset | KERNEL_HEAP_BASE);
-            memcpy(allocator->freeBlocks + i, allocator->freeBlocks + i + 1, (allocator->freeBlockCount - i - 1) * sizeof(KernelFreeBlock));
+            block = (void*)((uintptr_t)allocator->freeBlocks[i].offset | KERNEL_HEAP_MASK);
+            memmove(allocator->freeBlocks + i, allocator->freeBlocks + i + 1, (allocator->freeBlockCount - i - 1) * sizeof(KernelFreeBlock));
             allocator->freeBlockCount--;
             return block;
         }
@@ -78,7 +99,7 @@ void kfree(void* addr)
     KernelFreeBlock* oldStack;
     KernelFreeBlock* newStack;
 
-    KernelMemoryAllocator* allocator;
+    volatile KernelMemoryAllocator* allocator;
     KernelBlockHeader* block;
 
     oldStack = NULL;

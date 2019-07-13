@@ -17,8 +17,8 @@ static page_addr _pmem_alloc_page_stack(void)
     page_addr page;
 
     allocator = &gKernel.pageAllocator;
-    page = allocator->stack[allocator->count];
-    allocator->count--;
+    page = allocator->stack[--allocator->count];
+
     return page;
 }
 

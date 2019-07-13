@@ -38,13 +38,15 @@ static void load_image(FragmentsKernelInfo* info, uint64_t* pagetable, const Mfs
 {
     char tmp[MFS_CHUNK];
     MfsFileChunk* file;
+    char* kimage;
 
     (void)pagetable;
     mfs_read(tmp, part, inode);
     file = (MfsFileChunk*)tmp;
     info->kimageSize = file->size;
-    info->kimage = alloc_pages(info, info->kimageSize);
-    mfs_read_file(info->kimage, part, inode, 0, info->kimageSize);
+    kimage = alloc_pages(info, info->kimageSize);
+    mfs_read_file(kimage, part, inode, 0, info->kimageSize);
+    info->kimage = (uintptr_t)kimage;
 }
 
 static void load_kernel(FragmentsKernelInfo* info, uint64_t* pagetable, const MfsPartition* part, uint32_t inode)

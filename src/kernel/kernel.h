@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 #include <fragments.h>
+#include <sys/types.h>
+
+#define BREAKPOINT do { __asm__ __volatile__ ("xchg %bx, %bx\r\n"); } while (0)
 
 #define VMEM_USED   0x00000001
 #define ASM         __asm__ __volatile__
@@ -16,6 +19,10 @@
 
 #define PROCESS_STATUS_NORMAL   0x00
 #define PROCESS_STATUS_SYSCALL  0x01
+
+#define PAGE_RECURSE    0x1fe
+#define PAGE_KERNEL     0x1ff
+#define RECURSE_BASE    0xffffff0000000000
 
 typedef struct
 {
@@ -73,6 +80,10 @@ typedef struct {
 } PACKED Tss;
 
 typedef struct {
+    uint64_t    cr3;
+} PACKED AddressSpace;
+
+typedef struct {
     uint64_t    rax;            /* 0x00 */
     uint64_t    rbx;            /* 0x08 */
     uint64_t    rcx;            /* 0x10 */
@@ -95,10 +106,11 @@ typedef struct {
 } PACKED CpuState;
 
 typedef struct {
-    CpuState    state;
-    uint32_t    nextProcess;
-    uint32_t    prevProcess;
-    uint32_t    status;
+    CpuState        state;
+    AddressSpace    addrSpace;
+    uint32_t        nextProcess;
+    uint32_t        prevProcess;
+    uint32_t        status;
 } PACKED ProcessData;
 
 typedef struct _KernelThreadContext
@@ -106,11 +118,14 @@ typedef struct _KernelThreadContext
     struct _KernelThreadContext*    ctx;
     void*                           stack;
     Tss*                            tss;
+    void*                           tmpPageAddr;
 } PACKED KernelThreadContext;
 
 typedef struct
 {
     uint16_t*               screen;
+    char*                   kimage;
+    size_t                  kimageSize;
     FragmentsKernelInfo     bootInfo;
     PageAllocator           pageAllocator;
     KernelMemoryAllocator   memoryAllocator;
@@ -126,6 +141,10 @@ inline static size_t page_size_round(size_t size)
         return 0;
     return (((size - 1) / PAGESIZE) + 1) * PAGESIZE;
 }
+
+/* addr_space */
+void addr_space_create(AddressSpace* addrSpace);
+void addr_space_switch(AddressSpace* addrSpace);
 
 /* print */
 void clear_screen(void);
@@ -149,9 +168,10 @@ page_addr   pmem_alloc_page(void);
 void        pmem_free_page(page_addr page);
 
 /* vmem */
-void    vmem_map(void* vaddr, page_addr page, int flags);
-void*   vmem_io_map(page_addr base, size_t size);
-void    vmem_unmap_lower(void);
+page_addr*  vmem_recurse(uint16_t a, uint16_t b, uint16_t c, uint16_t d);
+void        vmem_map(void* vaddr, page_addr page, int flags);
+void*       vmem_io_map(page_addr base, size_t size);
+void        vmem_unmap_lower(void);
 
 /* gdt */
 void gdt_init(void);
@@ -173,5 +193,14 @@ void idt_register(uint8_t index, uint8_t ist, void* handler);
 
 /* int handlers */
 void int_handler_keyboard(void);
+
+/* process */
+pid_t   process_create(void);
+void    process_elf_load(pid_t process, const char* data);
+void    process_run(pid_t process);
+
+/* kimage */
+void        kimage_init(void);
+const char* kimage_open(const char* path);
 
 #endif

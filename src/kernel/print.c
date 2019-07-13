@@ -14,6 +14,12 @@ void clear_screen(void)
     y = 0;
 }
 
+static void scroll(void)
+{
+    memmove(gKernel.screen, gKernel.screen + SCREEN_X, SCREEN_X * (SCREEN_Y - 1) * 2);
+    memset(gKernel.screen + SCREEN_X * (SCREEN_Y - 1), 0, SCREEN_X * 2);
+}
+
 void putchar(int c)
 {
     uint16_t value;
@@ -32,6 +38,11 @@ void putchar(int c)
     {
         x = 0;
         y++;
+    }
+    if (y >= SCREEN_Y)
+    {
+        scroll();
+        y--;
     }
 }
 

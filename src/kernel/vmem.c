@@ -1,10 +1,7 @@
 #include <string.h>
 #include "kernel.h"
 
-#define PAGE_RECURSE    0x1fe
-#define RECURSE_BASE    0xffffff0000000000
-
-page_addr* _recursivePagePointer(uint16_t a, uint16_t b, uint16_t c, uint16_t d)
+page_addr* vmem_recurse(uint16_t a, uint16_t b, uint16_t c, uint16_t d)
 {
     uint64_t addr;
 
@@ -22,12 +19,12 @@ static void _vmem_ensure_mapped(uint16_t a, uint16_t b, uint16_t c, uint16_t d)
     page_addr* ptr;
     page_addr newPage;
 
-    ptr = _recursivePagePointer(a, b, c, d);
+    ptr = vmem_recurse(a, b, c, d);
     if (*ptr == 0)
     {
         newPage = pmem_alloc_page();
         *ptr = (newPage | 1);
-        memset(_recursivePagePointer(b, c, d, 0), 0, PAGESIZE);
+        memset(vmem_recurse(b, c, d, 0), 0, PAGESIZE);
     }
 }
 
@@ -50,7 +47,7 @@ void vmem_map(void* vaddr, page_addr page, int flags)
     _vmem_ensure_mapped(PAGE_RECURSE, PAGE_RECURSE, a, b);
     _vmem_ensure_mapped(PAGE_RECURSE, a, b, c);
 
-    pageSlot = _recursivePagePointer(a, b, c, d);
+    pageSlot = vmem_recurse(a, b, c, d);
     *pageSlot = (page | 1);
 }
 
@@ -87,22 +84,22 @@ void vmem_unmap_lower(void)
 
     for (a = 0; a < 256; ++a)
     {
-        pageA = _recursivePagePointer(PAGE_RECURSE, PAGE_RECURSE, PAGE_RECURSE, a);
+        pageA = vmem_recurse(PAGE_RECURSE, PAGE_RECURSE, PAGE_RECURSE, a);
         if (*pageA)
         {
             for (b = 0; b < 512; ++b)
             {
-                pageB = _recursivePagePointer(PAGE_RECURSE, PAGE_RECURSE, a, b);
+                pageB = vmem_recurse(PAGE_RECURSE, PAGE_RECURSE, a, b);
                 if (*pageB)
                 {
                     for (c = 0; c < 512; ++c)
                     {
-                        pageC = _recursivePagePointer(PAGE_RECURSE, a, b, c);
+                        pageC = vmem_recurse(PAGE_RECURSE, a, b, c);
                         if (*pageC)
                         {
                             for (d = 0; d < 512; ++d)
                             {
-                                pageD = _recursivePagePointer(a, b, c, d);
+                                pageD = vmem_recurse(a, b, c, d);
                                 if (*pageD)
                                     _freePageInMap(pageD);
                             }
