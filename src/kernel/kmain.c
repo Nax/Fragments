@@ -1,5 +1,6 @@
 #include <string.h>
 #include <sys/msr.h>
+#include <sys/types.h>
 #include "kernel.h"
 
 KernelContext gKernel;
@@ -36,8 +37,31 @@ static void kernel_threads_enter(int threadId)
     __asm__ __volatile__ ("ltr %0\r\n" :: "r"(tssEntry));
 }
 
+static void start_vfsd(void)
+{
+    pid_t pid;
+    const char* image;
+
+    println("Starting VFSd...");
+    pid = process_create();
+    println("PID allocated");
+    image = kimage_open("sbin/vfsd");
+    println("Image found");
+    process_elf_load(pid, image);
+    println("Image loaded");
+    process_run(pid);
+    println("If you see this message then please call staff");
+
+    putchar('\n');
+}
+
 void kmain(FragmentsKernelInfo* info)
 {
+    uint64_t cr3;
+
+    __asm__ __volatile__ ("mov %%cr3, %%rax\r\n" : "=a"(cr3));
+
+    gKernel.cr3 = cr3;
     gKernel.screen = (uint16_t*)0xb8000;
     memcpy(&gKernel.bootInfo, info, sizeof(gKernel.bootInfo));
 
@@ -48,6 +72,8 @@ void kmain(FragmentsKernelInfo* info)
     printhex64((uint64_t)gKernel.bootInfo.kimage);
     putchar('\n');
 
+    vmem_init();
+    BREAKPOINT;
     pmem_init();
     kimage_init();
     gKernel.screen = vmem_io_map(0xb8000, 80 * 25 * 2);
@@ -68,8 +94,7 @@ void kmain(FragmentsKernelInfo* info)
     idt_register(0x21, 0, &int_handler_keyboard);
     //irq_enable(1);
 
-    printhex64((uint64_t)kimage_open("sbin/vfsd"));
-    putchar('\n');
+    start_vfsd();
 
     kernel_wait();
 }

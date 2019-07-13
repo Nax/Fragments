@@ -1,34 +1,40 @@
 #include <string.h>
 #include "kernel.h"
 
-page_addr* vmem_recurse(uint16_t a, uint16_t b, uint16_t c, uint16_t d)
+void vmem_init(void)
 {
-    uint64_t addr;
+    page_addr* pml4;
+    page_addr* identity;
 
-    addr = RECURSE_BASE;
-    addr |= ((uint64_t)a << (3 + 9 * 3));
-    addr |= ((uint64_t)b << (3 + 9 * 2));
-    addr |= ((uint64_t)c << (3 + 9 * 1));
-    addr |= ((uint64_t)d << (3 + 9 * 0));
-
-    return (page_addr*)addr;
+    pml4 = (page_addr*)gKernel.cr3;
+    identity = (page_addr*)pmem_alloc_page();
+    for (size_t i = 0; i < 512; ++i)
+        identity[i] = (i << 30) | 0x81;
+    pml4[PAGE_BASE_ENTRY] = (page_addr)identity | 1;
 }
 
-static void _vmem_ensure_mapped(uint16_t a, uint16_t b, uint16_t c, uint16_t d)
+void* vmem_physical(page_addr page)
 {
-    page_addr* ptr;
-    page_addr newPage;
+    return (void*)(PAGE_BASE | (page & 0xfffffffffffff000));
+}
 
-    ptr = vmem_recurse(a, b, c, d);
-    if (*ptr == 0)
+page_addr* _ensure_mapped(page_addr* table, uint16_t index)
+{
+    page_addr page;
+    page_addr* tmp;
+
+    page = table[index];
+    if (!page)
     {
-        newPage = pmem_alloc_page();
-        *ptr = (newPage | 1);
-        memset(vmem_recurse(b, c, d, 0), 0, PAGESIZE);
+        page = pmem_alloc_page();
+        tmp = vmem_physical(page);
+        memset(tmp, 0, PAGESIZE);
+        table[index] = page | 1;
     }
+    return vmem_physical(page);
 }
 
-void vmem_map(void* vaddr, page_addr page, int flags)
+void vmem_map(uint64_t cr3, void* vaddr, page_addr page, int flags)
 {
     (void)flags;
 
@@ -36,19 +42,24 @@ void vmem_map(void* vaddr, page_addr page, int flags)
     uint16_t b;
     uint16_t c;
     uint16_t d;
-    page_addr* pageSlot;
+
+    page_addr* table;
 
     a = (((uint64_t)vaddr) >> (3 + 9 * 4)) & 0x1ff;
     b = (((uint64_t)vaddr) >> (3 + 9 * 3)) & 0x1ff;
     c = (((uint64_t)vaddr) >> (3 + 9 * 2)) & 0x1ff;
     d = (((uint64_t)vaddr) >> (3 + 9 * 1)) & 0x1ff;
 
-    _vmem_ensure_mapped(PAGE_RECURSE, PAGE_RECURSE, PAGE_RECURSE, a);
-    _vmem_ensure_mapped(PAGE_RECURSE, PAGE_RECURSE, a, b);
-    _vmem_ensure_mapped(PAGE_RECURSE, a, b, c);
+    table = vmem_physical(cr3);
+    table = _ensure_mapped(table, a);
+    table = _ensure_mapped(table, b);
+    table = _ensure_mapped(table, c);
+    table[d] = page | 1;
+}
 
-    pageSlot = vmem_recurse(a, b, c, d);
-    *pageSlot = (page | 1);
+void vmem_kmap(void* vaddr, page_addr page, int flags)
+{
+    vmem_map(gKernel.cr3, vaddr, page, flags);
 }
 
 void* vmem_io_map(page_addr base, size_t size)
@@ -58,7 +69,7 @@ void* vmem_io_map(page_addr base, size_t size)
     size = page_size_round(size);
     addr = kheap_alloc(size);
     for (size_t i = 0; i < size / PAGESIZE; ++i)
-        vmem_map((char*)addr + PAGESIZE * i, base + PAGESIZE * i, 0);
+        vmem_kmap((char*)addr + PAGESIZE * i, base + PAGESIZE * i, 0);
     return addr;
 }
 
@@ -73,6 +84,7 @@ static void _freePageInMap(page_addr* addr)
 
 void vmem_unmap_lower(void)
 {
+    /*
     uint16_t a;
     uint16_t b;
     uint16_t c;
@@ -111,12 +123,14 @@ void vmem_unmap_lower(void)
             }
             _freePageInMap(pageA);
         }
-    }
+    }*/
 
     /* Force a TLB flush */
+    /*
     __asm__ __volatile__ (
         "mov %%cr3, %%rax\r\n"
         "mov %%rax, %%cr3\r\n"
         ::: "rax"
     );
+    */
 }

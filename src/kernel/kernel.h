@@ -20,9 +20,9 @@
 #define PROCESS_STATUS_NORMAL   0x00
 #define PROCESS_STATUS_SYSCALL  0x01
 
-#define PAGE_RECURSE    0x1fe
 #define PAGE_KERNEL     0x1ff
-#define RECURSE_BASE    0xffffff0000000000
+#define PAGE_BASE_ENTRY 0x1f0
+#define PAGE_BASE       (0xffff000000000000 | (((uint64_t)PAGE_BASE_ENTRY) << 39))
 
 typedef struct
 {
@@ -123,6 +123,7 @@ typedef struct _KernelThreadContext
 
 typedef struct
 {
+    uint64_t                cr3;
     uint16_t*               screen;
     char*                   kimage;
     size_t                  kimageSize;
@@ -168,8 +169,10 @@ page_addr   pmem_alloc_page(void);
 void        pmem_free_page(page_addr page);
 
 /* vmem */
-page_addr*  vmem_recurse(uint16_t a, uint16_t b, uint16_t c, uint16_t d);
-void        vmem_map(void* vaddr, page_addr page, int flags);
+void        vmem_init(void);
+void*       vmem_physical(page_addr page);
+void        vmem_map(uint64_t cr3, void* vaddr, page_addr page, int flags);
+void        vmem_kmap(void* vaddr, page_addr page, int flags);
 void*       vmem_io_map(page_addr base, size_t size);
 void        vmem_unmap_lower(void);
 
@@ -198,6 +201,7 @@ void int_handler_keyboard(void);
 pid_t   process_create(void);
 void    process_elf_load(pid_t process, const char* data);
 void    process_run(pid_t process);
+void    process_return(CpuState* state);
 
 /* kimage */
 void        kimage_init(void);

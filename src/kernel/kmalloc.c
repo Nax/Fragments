@@ -30,7 +30,7 @@ void* kmalloc_raw(size_t size)
     for (size_t i = 0; i < pageCount; ++i)
     {
         page = pmem_alloc_page();
-        vmem_map((char*)vaddr + i * PAGESIZE, page, 0);
+        vmem_kmap((char*)vaddr + i * PAGESIZE, page, 0);
     }
 
     return vaddr;
