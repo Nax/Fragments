@@ -6,7 +6,11 @@
  * This file is distributed under the terms of the MIT license.
  */
 
+#include <unistd.h>
+
 void main(void)
 {
+    syscall(0, 0, 0, 0, 0, 0, 0);
+
     for (;;) {}
 }

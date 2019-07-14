@@ -7,13 +7,31 @@
 
 #define BREAKPOINT do { __asm__ __volatile__ ("xchg %bx, %bx\r\n"); } while (0)
 
+#define RFLAGS_CF   (1 << 0)
+#define RFLAGS_PF   (1 << 2)
+#define RFLAGS_AF   (1 << 4)
+#define RFLAGS_ZF   (1 << 6)
+#define RFLAGS_SF   (1 << 7)
+#define RFLAGS_TF   (1 << 8)
+#define RFLAGS_IF   (1 << 9)
+#define RFLAGS_DF   (1 << 10)
+#define RFLAGS_OF   (1 << 11)
+#define RFLAGS_NT   (1 << 14)
+#define RFLAGS_RF   (1 << 16)
+#define RFLAGS_VM   (1 << 17)
+#define RFLAGS_AC   (1 << 18)
+#define RFLAGS_VIF  (1 << 19)
+#define RFLAGS_VIP  (1 << 20)
+#define RFLAGS_ID   (1 << 21)
+
 #define VMEM_USED   0x00000001
 #define ASM         __asm__ __volatile__
 
-#define GDT_CODE_RING0  0x08
-#define GDT_DATA_RING0  0x10
-#define GDT_CODE_RING3  0x18
-#define GDT_DATA_RING3  0x20
+#define GDT_CODE_RING0      0x08
+#define GDT_DATA_RING0      (GDT_CODE_RING0 + 0x08)
+#define GDT_CODE_RING3_32   0x18
+#define GDT_DATA_RING3      (GDT_CODE_RING3_32 + 0x08)
+#define GDT_CODE_RING3      (GDT_CODE_RING3_32 + 0x10)
 #define GDT_TSS_BASE    0x30
 
 #define DESC_TYPE_TSS        0x9
@@ -213,5 +231,8 @@ void    process_return(CpuState* state);
 /* kimage */
 void        kimage_init(void);
 const char* kimage_open(const char* path);
+
+/* syscall */
+void syscall_handler(void);
 
 #endif

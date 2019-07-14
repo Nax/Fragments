@@ -12,7 +12,7 @@ process_return:
     mov [rsp + 0x00], rax
 
     ; CS
-    mov QWORD [rsp + 0x08], 0x1b
+    mov QWORD [rsp + 0x08], 0x2b
 
     ; RFLAGS
     mov rax, [rdi + 0x88]

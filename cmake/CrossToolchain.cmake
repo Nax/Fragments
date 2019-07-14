@@ -15,6 +15,19 @@ set(EXTRA_FLAGS "-Wall -Wextra")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
 
-set(COMPILE_OPTIONS_FREESTANDING -ffreestanding -nostdlib -lgcc)
-set(COMPILE_OPTIONS_KERNEL ${COMPILE_OPTIONS_FREESTANDING} -mcmodel=kernel -mno-red-zone)
-set(COMPILE_OPTIONS_USERLAND -ffreestanding)
+set(
+    COMPILE_OPTIONS_FREESTANDING
+    $<$<COMPILE_LANGUAGE:ASM_NASM>: -f elf64>
+    $<$<COMPILE_LANGUAGE:C>: -ffreestanding -nostdlib>
+)
+set(
+    COMPILE_OPTIONS_KERNEL
+    ${COMPILE_OPTIONS_FREESTANDING}
+    $<$<COMPILE_LANGUAGE:C>: -mno-red-zone -mcmodel=kernel>
+)
+
+set(
+    COMPILE_OPTIONS_USERLAND
+    $<$<COMPILE_LANGUAGE:ASM_NASM>: -f elf64>
+    $<$<COMPILE_LANGUAGE:C>: -ffreestanding>
+)

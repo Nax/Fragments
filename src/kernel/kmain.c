@@ -31,10 +31,19 @@ static void kernel_threads_init()
 static void kernel_threads_enter(int threadId)
 {
     uint16_t tssEntry;
+    uint64_t star;
 
     tssEntry = GDT_TSS_BASE + 0x10 * threadId;
-    msr_write(MSR_KERNELGSBASE, (uint64_t)gKernel.kernelThreads[threadId].ctx);
     __asm__ __volatile__ ("ltr %0\r\n" :: "r"(tssEntry));
+
+    star = 0;
+    star |= ((uint64_t)GDT_CODE_RING0) << 32;
+    star |= ((uint64_t)GDT_CODE_RING3_32) << 48;
+
+    msr_write(MSR_KERNELGSBASE, (uint64_t)gKernel.kernelThreads[threadId].ctx);
+    msr_write(MSR_LSTAR, (uint64_t)&syscall_handler);
+    msr_write(MSR_STAR, star);
+    msr_write(MSR_SFMASK, (RFLAGS_IF | RFLAGS_AC | RFLAGS_DF | RFLAGS_TF | RFLAGS_RF));
 }
 
 static void start_vfsd(void)
@@ -55,6 +64,15 @@ static void start_vfsd(void)
     putchar('\n');
 }
 
+static void enable_efer(void)
+{
+    uint64_t efer;
+
+    efer = msr_read(MSR_EFER);
+    efer |= 0x01;
+    msr_write(MSR_EFER, efer);
+}
+
 void kmain(FragmentsKernelInfo* info)
 {
     uint64_t cr3;
@@ -65,6 +83,7 @@ void kmain(FragmentsKernelInfo* info)
     gKernel.screen = (uint16_t*)0xb8000;
     memcpy(&gKernel.bootInfo, info, sizeof(gKernel.bootInfo));
 
+    enable_efer();
     clear_screen();
     println("Hello world from the kernel!");
     printhex8(gKernel.bootInfo.drive);
