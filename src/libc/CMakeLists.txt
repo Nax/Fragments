@@ -36,3 +36,4 @@ set_target_properties(libc_kernel PROPERTIES OUTPUT_NAME c_kernel)
 
 target_compile_options(libc PRIVATE ${COMPILE_OPTIONS_FREESTANDING})
 target_compile_options(libc_kernel PRIVATE ${COMPILE_OPTIONS_KERNEL})
+target_compile_definitions(libc_kernel PRIVATE __KERNEL__=1)
