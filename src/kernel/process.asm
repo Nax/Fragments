@@ -49,7 +49,5 @@ process_return:
     ; Since it's the pointer itself
     mov rdi, [rdi + 0x28]
 
-    xchg bx, bx
-
     ; Here we go
     iretq
