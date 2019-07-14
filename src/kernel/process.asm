@@ -12,7 +12,7 @@ process_return:
     mov [rsp + 0x00], rax
 
     ; CS
-    mov QWORD [rsp + 0x08], 0x13
+    mov QWORD [rsp + 0x08], 0x1b
 
     ; RFLAGS
     mov rax, [rdi + 0x88]
@@ -23,7 +23,8 @@ process_return:
     mov [rsp + 0x18], rax
 
     ; SS
-    mov QWORD [rsp + 0x20], 0
+    mov eax, 0x23
+    mov QWORD [rsp + 0x20], rax
 
     ; Now we need to load the whole CPU state
     mov rax, [rdi + 0x00]
@@ -47,6 +48,8 @@ process_return:
     ; We need to reload RDI last
     ; Since it's the pointer itself
     mov rdi, [rdi + 0x28]
+
+    xchg bx, bx
 
     ; Here we go
     iretq

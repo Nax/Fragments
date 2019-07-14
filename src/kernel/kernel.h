@@ -11,7 +11,9 @@
 #define ASM         __asm__ __volatile__
 
 #define GDT_CODE_RING0  0x08
-#define GDT_CODE_RING3  0x10
+#define GDT_DATA_RING0  0x10
+#define GDT_CODE_RING3  0x18
+#define GDT_DATA_RING3  0x20
 #define GDT_TSS_BASE    0x30
 
 #define DESC_TYPE_TSS        0x9
@@ -23,6 +25,11 @@
 #define PAGE_KERNEL     0x1ff
 #define PAGE_BASE_ENTRY 0x1f0
 #define PAGE_BASE       (0xffff000000000000 | (((uint64_t)PAGE_BASE_ENTRY) << 39))
+
+#define PAGE_READ       (1 << 0)
+#define PAGE_WRITE      (1 << 1)
+#define PAGE_EXECUTE    (1 << 2)
+#define PAGE_USER       (1 << 3)
 
 typedef struct
 {
@@ -178,7 +185,7 @@ void        vmem_unmap_lower(void);
 
 /* gdt */
 void gdt_init(void);
-void gdt_load(const void* gdtEntries, size_t count, uint16_t codeSeg);
+void gdt_load(const void* gdtEntries, size_t count, uint16_t codeSeg, uint16_t dataSeg);
 void gdt_describe_tss(uint16_t index, Tss* tss, size_t size);
 
 /* wait */

@@ -1,6 +1,12 @@
 #include <string.h>
 #include "kernel.h"
 
+#define PD_PRESENT              (1ull << 0)
+#define PD_WRITE                (1ull << 1)
+#define PD_USER                 (1ull << 2)
+#define PD_SIZE                 (1ull << 7)
+#define PD_EXECUTE_DISABLE      (1ull << 63)
+
 void vmem_init(void)
 {
     page_addr* pml4;
@@ -9,8 +15,8 @@ void vmem_init(void)
     pml4 = (page_addr*)gKernel.cr3;
     identity = (page_addr*)pmem_alloc_page();
     for (size_t i = 0; i < 512; ++i)
-        identity[i] = (i << 30) | 0x81;
-    pml4[PAGE_BASE_ENTRY] = (page_addr)identity | 1;
+        identity[i] = ((i << 30) | (PD_SIZE | PD_PRESENT));
+    pml4[PAGE_BASE_ENTRY] = (page_addr)identity | PD_PRESENT;
 }
 
 void* vmem_physical(page_addr page)
@@ -18,25 +24,28 @@ void* vmem_physical(page_addr page)
     return (void*)(PAGE_BASE | (page & 0xfffffffffffff000));
 }
 
-page_addr* _ensure_mapped(page_addr* table, uint16_t index)
+page_addr* _ensure_mapped(page_addr* table, uint16_t index, uint64_t dirFlags)
 {
     page_addr page;
     page_addr* tmp;
 
     page = table[index];
-    if (!page)
+    if (!(page & PD_PRESENT))
     {
         page = pmem_alloc_page();
         tmp = vmem_physical(page);
         memset(tmp, 0, PAGESIZE);
-        table[index] = page | 1;
+        table[index] = page | PD_PRESENT | dirFlags;
     }
+    else if ((page & dirFlags) != dirFlags)
+        table[index] = page | dirFlags;
     return vmem_physical(page);
 }
 
 void vmem_map(uint64_t cr3, void* vaddr, page_addr page, int flags)
 {
-    (void)flags;
+    uint64_t pdFlags;
+    uint64_t pdDirFlags;
 
     uint16_t a;
     uint16_t b;
@@ -45,16 +54,30 @@ void vmem_map(uint64_t cr3, void* vaddr, page_addr page, int flags)
 
     page_addr* table;
 
+    pdFlags = PD_PRESENT;
+    pdDirFlags = 0;
+    if (flags & PAGE_USER)
+    {
+        pdFlags |= PD_USER;
+        pdDirFlags |= PD_USER;
+    }
+    if (flags & PAGE_WRITE)
+    {
+        pdFlags |= PD_WRITE;
+        pdDirFlags |= PD_WRITE;
+    }
+    //if (!(flags & PAGE_EXECUTE))    pdFlags |= PD_EXECUTE_DISABLE;
+
     a = (((uint64_t)vaddr) >> (3 + 9 * 4)) & 0x1ff;
     b = (((uint64_t)vaddr) >> (3 + 9 * 3)) & 0x1ff;
     c = (((uint64_t)vaddr) >> (3 + 9 * 2)) & 0x1ff;
     d = (((uint64_t)vaddr) >> (3 + 9 * 1)) & 0x1ff;
 
     table = vmem_physical(cr3);
-    table = _ensure_mapped(table, a);
-    table = _ensure_mapped(table, b);
-    table = _ensure_mapped(table, c);
-    table[d] = page | 1;
+    table = _ensure_mapped(table, a, pdDirFlags);
+    table = _ensure_mapped(table, b, pdDirFlags);
+    table = _ensure_mapped(table, c, pdDirFlags);
+    table[d] = page | pdFlags;
 }
 
 void vmem_kmap(void* vaddr, page_addr page, int flags)

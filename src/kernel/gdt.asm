@@ -14,6 +14,7 @@ GLOBAL gdt_load
 ; RDI: A pointer to GDT entries
 ; RSI: A count of entries
 ; RDX: The new code segment
+; RCX: The new data segment
 gdt_load:
     mov [GDT.Pointer], rdi
     mov [GDT.Size], si
@@ -26,7 +27,7 @@ gdt_load:
     retfq
 
 gdt_loaded:
-    xor eax, eax
+    mov eax, ecx
     mov ds, ax
     mov es, ax
     mov fs, ax

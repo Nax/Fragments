@@ -62,7 +62,7 @@ static TssDescriptor* _tss(uint16_t index)
     return &gDescriptors[index].tss;
 }
 
-static void _gdtMakeCode(uint16_t index, int ring)
+static void _gdtMakeSeg(uint16_t index, int ring, int data)
 {
     GdtDescriptor* desc;
 
@@ -71,15 +71,15 @@ static void _gdtMakeCode(uint16_t index, int ring)
     desc->baseLo = 0;
     desc->baseMd = 0;
     desc->accessed = 0;
-    desc->rw = 0;
+    desc->rw = !!(data);
     desc->dc = 0;
-    desc->execute = 1;
+    desc->execute = !(data);
     desc->segment = 1;
     desc->level = ring;
     desc->present = 1;
     desc->limitHi = 0;
     desc->zero = 0;
-    desc->longmode = 1;
+    desc->longmode = !(data);
     desc->size = 0;
     desc->granularity = 0;
     desc->baseHi = 0;
@@ -87,8 +87,11 @@ static void _gdtMakeCode(uint16_t index, int ring)
 
 void gdt_init(void)
 {
-    _gdtMakeCode(GDT_CODE_RING0, 0);
-    gdt_load(gDescriptors, sizeof(gDescriptors) - 1, GDT_CODE_RING0);
+    _gdtMakeSeg(GDT_CODE_RING0, 0, 0);
+    _gdtMakeSeg(GDT_DATA_RING0, 0, 1);
+    _gdtMakeSeg(GDT_CODE_RING3, 3, 0);
+    _gdtMakeSeg(GDT_DATA_RING3, 3, 1);
+    gdt_load(gDescriptors, sizeof(gDescriptors) - 1, GDT_CODE_RING0, GDT_DATA_RING0);
 }
 
 void gdt_describe_tss(uint16_t index, Tss* tss, size_t size)

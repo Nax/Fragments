@@ -73,7 +73,6 @@ void kmain(FragmentsKernelInfo* info)
     putchar('\n');
 
     vmem_init();
-    BREAKPOINT;
     pmem_init();
     kimage_init();
     gKernel.screen = vmem_io_map(0xb8000, 80 * 25 * 2);
