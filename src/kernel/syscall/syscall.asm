@@ -26,6 +26,18 @@
 BITS 64
 SECTION .text
 GLOBAL syscall_handler
+GLOBAL syscall_return
+EXTERN syscall_dispatch
+
+; x86_64 syscall ABI:
+;
+; RAX - Syscall number
+; RSI - arg0
+; RDX - arg1
+; R10 - arg2
+; R8  - arg3
+; R9  - arg4
+; RDI - arg5
 
 ; The single entrypoint for syscalls
 syscall_handler:
@@ -40,11 +52,47 @@ syscall_handler:
     mov rsp, [gs:0x08]
     swapgs
 
-    ; This is where we should in theory call an actual handler
-    mov rax, -1
+    ; Now we can alloc our SyscallReq
+    sub rsp, 0x48
 
-    ; Reload the userland stack
-    mov rsp, rbx
+    ; Save RIP, RFLAGS and RSP
+    mov [rsp + 0x00], rcx
+    mov [rsp + 0x08], r11
+    mov [rsp + 0x10], rbx
 
-    ; Return from syscall
+    ; Save the syscall args
+    mov [rsp + 0x18], rsi
+    mov [rsp + 0x20], rdx
+    mov [rsp + 0x28], r10
+    mov [rsp + 0x30], r8
+    mov [rsp + 0x38], r9
+    mov [rsp + 0x40], rdi
+
+    ; Load the syscall number
+    mov rdi, rax
+
+    ; Load the syscall req
+    mov rsi, rsp
+
+    ; Dispatch the syscall
+    jmp syscall_dispatch
+
+; RDI: SyscallReq* req
+; RSI: uint64_t value
+syscall_return:
+    ; Disable interrupts
+    cli
+
+    ; Load RIP and RFLAGS
+    mov rcx, [rdi + 0x00]
+    mov r11, [rdi + 0x08]
+
+    ; Load the return value
+    mov rax, rsi
+
+    ; Load the userland stack
+    mov rsp, [rdi + 0x10]
+
+    ; Return to userland
     o64 sysret
+

@@ -184,6 +184,15 @@ typedef struct
     KernelThreadContext*    kernelThreads;
 } KernelContext;
 
+typedef struct {
+    uint64_t rip;
+    uint64_t rflags;
+    uint64_t rsp;
+    uint64_t args[6];
+} PACKED SyscallReq;
+
+typedef int64_t (*syscall_ptr)(SyscallReq*);
+
 extern KernelContext gKernel;
 
 inline static size_t page_size_round(size_t size)
@@ -259,5 +268,7 @@ const char* kimage_open(const char* path);
 
 /* syscall */
 void syscall_handler(void);
+void syscall_dispatch(unsigned int sysno, SyscallReq* req);
+void syscall_return(SyscallReq* req, int64_t value);
 
 #endif
