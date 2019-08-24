@@ -1,4 +1,3 @@
-;
 ; Copyright (c) 2019, Maxime Bacoux
 ; All rights reserved.
 ;
@@ -21,7 +20,6 @@
 ; ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 ; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ; SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-;
 
 BITS 64
 SECTION .text
@@ -31,12 +29,6 @@ EXTERN kmain
 ALIGN 8
 
 enable_SSE:
-    ; Check for SSE support
-    mov eax, 0x1
-    cpuid
-    test edx, 1<<25
-    jz .end
-
     ; Enable SSE
     mov rax, cr0
     and rax, 0xfffffffffffffffb
@@ -45,23 +37,6 @@ enable_SSE:
     mov rax, cr4
     or rax, 3 << 9
     mov cr4, rax
-
-.end:
-    ret
-
-enable_AVX:
-    ; TODO: Check for AVX support
-
-    ; Enable OSXSAVE
-    mov rax, cr4
-    or rax, 0x00040000
-    mov cr4, rax
-
-    ; Enable AVX
-    xor ecx, ecx
-    xgetbv
-    or eax, 7
-    xsetbv
 
     ret
 

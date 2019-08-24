@@ -102,6 +102,8 @@ void kmain(FragmentsKernelInfo* info)
 {
     uint64_t cr3;
 
+    detect_cpu_features();
+
     __asm__ __volatile__ ("mov %%cr3, %%rax\r\n" : "=a"(cr3));
 
     gKernel.cr3 = cr3;
