@@ -102,8 +102,6 @@ void kmain(FragmentsKernelInfo* info)
 {
     uint64_t cr3;
 
-    detect_cpu_features();
-
     __asm__ __volatile__ ("mov %%cr3, %%rax\r\n" : "=a"(cr3));
 
     gKernel.cr3 = cr3;
@@ -112,6 +110,8 @@ void kmain(FragmentsKernelInfo* info)
 
     enable_efer();
     clear_screen();
+    detect_cpu_features();
+    print_cpu_features();
     println("Hello world from the kernel!");
     printhex8(gKernel.bootInfo.drive);
     putchar('\n');

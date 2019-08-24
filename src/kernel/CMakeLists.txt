@@ -37,6 +37,6 @@ target_compile_options(
     $<$<COMPILE_LANGUAGE:C>: -mno-red-zone>
     $<$<COMPILE_LANGUAGE:C>: -mcmodel=kernel>
 )
-target_include_directories(kernel PUBLIC "${CMAKE_SOURCE_DIR}/include")
+target_include_directories(kernel PUBLIC "${CMAKE_SOURCE_DIR}/include" PRIVATE "${CMAKE_SOURCE_DIR}/src")
 target_link_options(kernel PRIVATE -ffreestanding -nostdlib -mcmodel=kernel -z max-page-size=0x1000 -T "${LINKER_SCRIPT}")
 target_link_libraries(kernel libc_kernel)

@@ -74,18 +74,7 @@
 #define PAGE_EXECUTE    (1 << 2)
 #define PAGE_USER       (1 << 3)
 
-typedef struct {
-    union {
-        struct {
-            uint32_t cpuid1_edx;
-            uint32_t cpuid1_ecx;
-            uint32_t cpuid7_ebx;
-            uint32_t cpuid7_ecx;
-            uint32_t cpuidex1_edx;
-            uint32_t cpuidex1_ecx;
-        };
-    };
-} CpuFeatures;
+#include <kernel/arch/x86_64/cpu_features.h>
 
 typedef struct
 {
@@ -215,9 +204,6 @@ inline static size_t page_size_round(size_t size)
         return 0;
     return (((size - 1) / PAGESIZE) + 1) * PAGESIZE;
 }
-
-/* cpu features */
-void detect_cpu_features(void);
 
 /* addr_space */
 void addr_space_create(AddressSpace* addrSpace);
